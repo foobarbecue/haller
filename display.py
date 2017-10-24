@@ -3,6 +3,7 @@ import argparse
 import random
 import sys
 import time
+from datetime import datetime
 
 import config
 from nanoleaf import Aurora
@@ -382,6 +383,27 @@ def streaming_sunrise(a):
         if band > max(y) - 3*delta or band < min(y):
             delta = -delta
 
+
+def streaming_clock(a):
+    s = a.effect_stream()
+    while True:
+        ids = [p['panelId'] for p in sorted(a.rotated_panel_positions, key=lambda k: k['x'])]
+        leaf_time = datetime.now()
+
+        scaled_sec = round(leaf_time.second / 60 * 255)
+        s.panel_prepare(ids[0], 0, scaled_sec, 255 - scaled_sec)
+
+        scaled_mins = round(leaf_time.minute / 60 * 255)
+        s.panel_prepare(ids[1], 0, scaled_mins, 255 - scaled_mins)
+
+        scaled_hours = round(leaf_time.hour / 24 * 255)
+        s.panel_prepare(ids[2], 0, scaled_hours, 255 - scaled_hours)
+
+        for id in ids[3:]:
+            s.panel_prepare(id, 0, 0, 0)
+
+        s.panel_strobe()
+        time.sleep(0.3)
 
 def display(a, args):
     fn = 'streaming_%s' % args.streaming
