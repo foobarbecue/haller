@@ -405,6 +405,46 @@ def streaming_clock(a):
         s.panel_strobe()
         time.sleep(0.3)
 
+def to_oct_color(inp):
+    colors = [
+        [255, 0 , 0],
+        [255, 127, 0],
+        [255, 255, 0],
+        [0, 255, 0],
+        [0, 0, 255],
+        [75, 0, 130],
+        [148, 0, 211],
+        [255,255,255]
+    ]
+    least_significant_color = colors[inp % 8]
+    most_singificant_color = colors[int(inp / 8)]
+    return least_significant_color, most_singificant_color
+
+def streaming_clock2(a):
+
+    s = a.effect_stream()
+    while True:
+        ids = [p['panelId'] for p in sorted(a.rotated_panel_positions, key=lambda k: k['x'])]
+        leaf_time = datetime.now()
+
+        low, high = to_oct_color(leaf_time.hour)
+        s.panel_prepare(ids[0], *high)
+        s.panel_prepare(ids[1], *low)
+
+        low, high = to_oct_color(leaf_time.minute)
+        s.panel_prepare(ids[2], *high)
+        s.panel_prepare(ids[3], *low)
+
+        low, high = to_oct_color(leaf_time.second)
+        s.panel_prepare(ids[4], *high)
+        s.panel_prepare(ids[5], *low)
+
+        for id in ids[6:]:
+            s.panel_prepare(id, 0, 0, 0)
+
+        s.panel_strobe()
+        time.sleep(0.9)
+
 def display(a, args):
     fn = 'streaming_%s' % args.streaming
     if fn in globals():
